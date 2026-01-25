@@ -14,3 +14,36 @@ UseCases: A person who do trading for stock/ crypto
 A student who wants to learn more about stocking and finance.
 
 Example: John wants to do trading but he didn't know about what types of stock he can make profit from investment.
+
+
+# Installation
+
+To install the necessary dependencies for the ai-stock-trading project, please follow these steps:
+
+1. Clone the repository to your local machine:
+
+   ```bash
+   git clone https://github.com/MasonInman29/ai-stock-trading.git
+    cd ai-stock-trading
+    ```
+
+2. Start your Docker daemon if it's not already running.
+
+    Linux:
+    ```bash
+    sudo systemctl start docker 
+    ```
+    Windows/Mac: 
+    ```bash
+    docker desktop start
+   ```
+3. Start the docker containers:
+
+   ```bash
+   docker-compose up --build
+   ```
+   
+4. Access the application:
+
+    Open your web browser and navigate to `http://localhost:3000` to access the ai-stock-trading application.
+   

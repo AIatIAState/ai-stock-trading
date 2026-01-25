@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  vite:
+    build:
+      context: ./stockai-web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+  fastapi:
+    build:
+      context: ./fastapi
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
