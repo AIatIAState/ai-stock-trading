@@ -30,7 +30,7 @@ export default function Hero() {
               Explore data
             </Button>
             <Button variant="outlined">
-              Made to learn, not to flex
+              Made to learn, not to paywall
             </Button>
           </Stack>
         </Stack>
