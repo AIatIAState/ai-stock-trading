@@ -206,4 +206,11 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-data/
+data/5 min
+data/Daily
+data/hourly
+data/stocks.db
+data/stocks.db-wal
+data/stocks.db-shm
+data/*.db
+data/*.sqlite
