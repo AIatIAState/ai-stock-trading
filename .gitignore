@@ -208,3 +208,9 @@ __marimo__/
 
 data/5 min
 data/Daily
+data/hourly
+data/stocks.db
+data/stocks.db-wal
+data/stocks.db-shm
+data/*.db
+data/*.sqlite
