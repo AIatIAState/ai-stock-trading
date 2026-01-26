@@ -18,6 +18,9 @@ export default function AppAppBar() {
             <Button component={RouterLink} to="/" color="inherit">
               Home
             </Button>
+              <Button component={RouterLink} to="/dashboard" color="inherit">
+                  Dashboard
+              </Button>
             <Button component={RouterLink} to="/data" color="inherit">
               Data Explorer
             </Button>
