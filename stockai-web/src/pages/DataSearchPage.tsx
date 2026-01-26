@@ -23,9 +23,9 @@ import {
 } from '@mui/material'
 import { useMemo, useState } from 'react'
 import { fetchBars, fetchSymbols, type Bar, type SymbolInfo } from '../api'
-import AppTheme from '../shared-theme/AppTheme'
-import AppAppBar from './components/AppAppBar'
-import Footer from './components/Footer'
+import AppTheme from '../themes/AppTheme'
+import AppAppBar from '../components/AppAppBar'
+import Footer from '../components/Footer'
 
 const timeframes = [
   { label: 'Daily', value: 'daily' },
