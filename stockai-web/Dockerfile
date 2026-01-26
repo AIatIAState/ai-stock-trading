@@ -10,6 +10,10 @@ COPY package.json package-lock.json ./
 # Install dependencies
 RUN npm install
 
+# Optional API base for build-time configuration
+ARG VITE_API_BASE
+ENV VITE_API_BASE=$VITE_API_BASE
+
 # Copy the rest of the source code
 COPY . .
 
