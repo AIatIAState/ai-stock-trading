@@ -143,39 +143,55 @@ def load_file(conn: sqlite3.Connection, meta: dict, batch_size: int = 5000):
                 )
             )
             if len(batch) >= batch_size:
+                changes_before = conn.total_changes
                 conn.executemany(
                     """
                     INSERT INTO bars (
                         symbol, per, date, time, open, high, low, close, volume, openint,
                         timeframe, exchange, asset_type, country
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM bars WHERE symbol = ? AND date = ? AND time = ? AND timeframe = ?
+                    )
                     """,
-                    batch,
+                    [
+                        (*row, row[0], row[2], row[3], row[10])
+                        for row in batch
+                    ],
                 )
+                bars_inserted = conn.total_changes - changes_before
                 conn.executemany(
                     "INSERT OR IGNORE INTO symbols (symbol, exchange, asset_type, country) VALUES (?, ?, ?, ?)",
                     [(row[0], exchange, asset_type, country) for row in batch],
                 )
-                inserted += len(batch)
+                inserted += bars_inserted
                 batch = []
 
         if batch:
+            changes_before = conn.total_changes
             conn.executemany(
                 """
                 INSERT INTO bars (
                     symbol, per, date, time, open, high, low, close, volume, openint,
                     timeframe, exchange, asset_type, country
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM bars WHERE symbol = ? AND date = ? AND time = ? AND timeframe = ?
+                )
                 """,
-                batch,
+                [
+                    (*row, row[0], row[2], row[3], row[10])
+                    for row in batch
+                ],
             )
+            bars_inserted = conn.total_changes - changes_before
             conn.executemany(
                 "INSERT OR IGNORE INTO symbols (symbol, exchange, asset_type, country) VALUES (?, ?, ?, ?)",
                 [(row[0], exchange, asset_type, country) for row in batch],
             )
-            inserted += len(batch)
+            inserted += bars_inserted
 
     return inserted, bad_rows
 
@@ -183,8 +199,9 @@ def load_file(conn: sqlite3.Connection, meta: dict, batch_size: int = 5000):
 def create_indexes(conn: sqlite3.Connection):
     conn.executescript(
         """
-        CREATE INDEX IF NOT EXISTS idx_bars_symbol_date_time
-        ON bars (symbol, date, time);
+        DROP INDEX IF EXISTS idx_bars_symbol_date_time;
+        CREATE INDEX IF NOT EXISTS idx_bars_symbol_timeframe_date_time
+        ON bars (symbol, timeframe, date, time);
 
         CREATE INDEX IF NOT EXISTS idx_bars_timeframe
         ON bars (timeframe);
@@ -211,8 +228,8 @@ def main():
     )
     parser.add_argument(
         "--timeframes",
-        default="daily,5 min",
-        help="Comma-separated timeframe folders to load (default: 'daily,5 min').",
+        default="daily,hourly,5 min",
+        help="Comma-separated timeframe folders to load (default: 'daily,hourly,5 min').",
     )
     parser.add_argument(
         "--limit-files",
