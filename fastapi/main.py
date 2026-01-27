@@ -59,10 +59,16 @@ def get_bars(
     timeframe: str = Query("daily"),
     start: int | None = Query(None, description="YYYYMMDD"),
     end: int | None = Query(None, description="YYYYMMDD"),
+    order: str = Query("desc", description="Sort order: asc or desc"),
     limit: int = Query(500, ge=1, le=MAX_LIMIT),
 ):
     symbol_value = symbol.strip().upper()
     timeframe_value = timeframe.strip().lower()
+    order_value = order.strip().lower()
+
+    if order_value not in ("asc", "desc"):
+        raise HTTPException(status_code=400, detail="order must be 'asc' or 'desc'")
+    order_sql = "ASC" if order_value == "asc" else "DESC"
 
     where = ["symbol = ?", "timeframe = ?"]
     params: list[object] = [symbol_value, timeframe_value]
@@ -78,7 +84,7 @@ def get_bars(
         SELECT symbol, per, date, time, open, high, low, close, volume, openint, timeframe
         FROM bars
         WHERE {' AND '.join(where)}
-        ORDER BY date DESC, time DESC
+        ORDER BY date {order_sql}, time {order_sql}
         LIMIT ?
     """
     params.append(limit)
