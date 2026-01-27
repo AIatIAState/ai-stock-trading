@@ -8,6 +8,7 @@ import HighlightedCard from './HighlightedCard';
 import OptionBarChart from './OptionBarChart.tsx';
 import EarningsScatterChart from './EarningsScatterChart.tsx';
 import StatCard, {type StatCardProps } from './StatCard';
+import StockSearch from "./StockSearch.tsx";
 
 const data: StatCardProps[] = [
   {
@@ -49,6 +50,8 @@ export default function MainGrid() {
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
         Overview
       </Typography>
+        <StockSearch/>
+        <br/>
       <Grid
         container
         spacing={2}

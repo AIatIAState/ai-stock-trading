@@ -88,5 +88,5 @@ def get_bars(
         rows = conn.execute(sql, params).fetchall()
     finally:
         conn.close()
-
+    print(rows)
     return {"results": [dict(row) for row in rows]}

@@ -22,7 +22,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useMemo, useState } from 'react'
-import { fetchBars, fetchSymbols, type Bar, type SymbolInfo } from '../api'
+import { fetchBars, fetchSymbols, type Bar, type SymbolInfo } from '../services/api'
 import AppTheme from '../themes/AppTheme'
 import AppAppBar from '../components/AppAppBar'
 import Footer from '../components/Footer'
