@@ -10,7 +10,7 @@ export default function AppAppBar() {
             <Box>
               <Typography variant="h6">StockTrAIder</Typography>
               <Typography variant="body2" color="text.secondary">
-                Learn markets from past, present, and future
+                Learn markets from past, present, and future.
               </Typography>
             </Box>
           </Stack>
