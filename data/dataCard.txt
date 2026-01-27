@@ -1,0 +1,6 @@
+Data is from https://stooq.com/db/h/ US Daily and 5 Min ASCII format.
+
+Data is publically available, but we have post-processed the data into a custom SQLite Database.
+
+Expected file: <REPO_HOME_DIR>/data/stocks.db
+Accessed Jan 25, 2026
