@@ -6,7 +6,6 @@ import ActiveStocksPieChart from './ActiveStocksPieChart.tsx';
 import CustomizedDataGrid from './CustomizedDataGrid';
 import HighlightedCard from './HighlightedCard';
 import OptionBarChart from './OptionBarChart.tsx';
-import EarningsScatterChart from './EarningsScatterChart.tsx';
 import StatCard, {type StatCardProps } from './StatCard';
 import StockSearch from "./StockSearch.tsx";
 
@@ -66,9 +65,7 @@ export default function MainGrid() {
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <HighlightedCard />
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <EarningsScatterChart />
-        </Grid>
+
         <Grid size={{ xs: 12, md: 6 }}>
           <OptionBarChart />
         </Grid>
