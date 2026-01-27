@@ -4,9 +4,11 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   Container,
   Divider,
   FormControl,
+  Grid,
   InputLabel,
   MenuItem,
   Paper,
@@ -21,6 +23,12 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
+import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress'
+import { styled, useTheme } from '@mui/material/styles'
+import { BarChart } from '@mui/x-charts/BarChart'
+import { LineChart } from '@mui/x-charts/LineChart'
+import { PieChart } from '@mui/x-charts/PieChart'
+import { useDrawingArea } from '@mui/x-charts/hooks'
 import { useMemo, useState } from 'react'
 import { fetchBars, fetchSymbols, type Bar, type SymbolInfo } from '../api'
 import AppTheme from '../themes/AppTheme'
@@ -40,6 +48,337 @@ function formatDate(value: number) {
 function formatTime(value: number) {
   const str = String(value).padStart(6, '0')
   return `${str.slice(0, 2)}:${str.slice(2, 4)}`
+}
+
+type TrendSummary = {
+  up: number
+  down: number
+  flat: number
+  total: number
+}
+
+type StockChartData = {
+  labels: string[]
+  closes: number[]
+  volumes: number[]
+  rangeLabel: string
+  barsCount: number
+  lastClose: number | null
+  prevClose: number | null
+  lastVolume: number | null
+  avgVolume: number | null
+  trend: TrendSummary
+  tickStep: number
+}
+
+type ChangeTag = {
+  label: string
+  color: 'success' | 'error' | 'default'
+}
+
+function formatCompactNumber(value: number) {
+  const abs = Math.abs(value)
+  if (abs >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`
+  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
+  if (abs >= 1_000) return `${(value / 1_000).toFixed(1)}K`
+  return value.toFixed(0)
+}
+
+function getChangeTag(current: number | null, previous: number | null): ChangeTag {
+  if (current == null || previous == null || previous === 0) {
+    return { label: 'N/A', color: 'default' }
+  }
+  const change = ((current - previous) / previous) * 100
+  const sign = change > 0 ? '+' : ''
+  const label = `${sign}${change.toFixed(1)}%`
+  const color = change > 0 ? 'success' : change < 0 ? 'error' : 'default'
+  return { label, color }
+}
+
+function AreaGradient({ color, id }: { color: string; id: string }) {
+  return (
+    <defs>
+      <linearGradient id={id} x1="50%" y1="0%" x2="50%" y2="100%">
+        <stop offset="0%" stopColor={color} stopOpacity={0.4} />
+        <stop offset="100%" stopColor={color} stopOpacity={0} />
+      </linearGradient>
+    </defs>
+  )
+}
+
+interface StyledTextProps {
+  variant: 'primary' | 'secondary'
+}
+
+const StyledText = styled('text', {
+  shouldForwardProp: (prop) => prop !== 'variant',
+})<StyledTextProps>(({ theme, variant }) => ({
+  textAnchor: 'middle',
+  dominantBaseline: 'central',
+  fill: (theme.vars || theme).palette.text.secondary,
+  fontSize:
+    variant === 'primary'
+      ? theme.typography.h5.fontSize
+      : theme.typography.body2.fontSize,
+  fontWeight:
+    variant === 'primary'
+      ? theme.typography.h5.fontWeight
+      : theme.typography.body2.fontWeight,
+}))
+
+interface PieCenterLabelProps {
+  primaryText: string
+  secondaryText: string
+}
+
+function PieCenterLabel({ primaryText, secondaryText }: PieCenterLabelProps) {
+  const { width, height, left, top } = useDrawingArea()
+  const primaryY = top + height / 2 - 10
+  const secondaryY = primaryY + 24
+
+  return (
+    <>
+      <StyledText variant="primary" x={left + width / 2} y={primaryY}>
+        {primaryText}
+      </StyledText>
+      <StyledText variant="secondary" x={left + width / 2} y={secondaryY}>
+        {secondaryText}
+      </StyledText>
+    </>
+  )
+}
+
+function StockCharts({
+  data,
+  symbol,
+  timeframe,
+}: {
+  data: StockChartData
+  symbol: string
+  timeframe: string
+}) {
+  const theme = useTheme()
+  const priceChange = getChangeTag(data.lastClose, data.prevClose)
+  const volumeChange = getChangeTag(data.lastVolume, data.avgVolume)
+  const tickInterval = (_index: number, i: number) => i % data.tickStep === 0
+  const safeSymbol = symbol.replace(/[^a-zA-Z0-9]/g, '-')
+  const priceGradientId = `price-gradient-${safeSymbol}`
+  const timeframeLabel = timeframe === 'daily' ? 'Daily' : timeframe
+  const trendTotal = data.trend.total
+  const barLabel = timeframe === 'daily' ? 'days' : 'bars'
+  const upPercent =
+    trendTotal === 0 ? 0 : Math.round((data.trend.up / trendTotal) * 100)
+  const trendRows = [
+    {
+      label: 'Up',
+      value: data.trend.up,
+      color: theme.palette.success.main,
+    },
+    {
+      label: 'Down',
+      value: data.trend.down,
+      color: theme.palette.error.main,
+    },
+    {
+      label: 'Flat',
+      value: data.trend.flat,
+      color: theme.palette.grey[500],
+    },
+  ]
+
+  return (
+    <Grid container spacing={2} columns={12}>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Card variant="outlined" sx={{ width: '100%' }}>
+          <CardContent>
+            <Typography component="h2" variant="subtitle2" gutterBottom>
+              {symbol} Price
+            </Typography>
+            <Stack sx={{ justifyContent: 'space-between' }}>
+              <Stack
+                direction="row"
+                sx={{ alignItems: 'center', gap: 1 }}
+              >
+                <Typography variant="h4" component="p">
+                  {data.lastClose == null ? '--' : `${data.lastClose.toFixed(2)} USD`}
+                </Typography>
+                <Chip size="small" color={priceChange.color} label={priceChange.label} />
+              </Stack>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                {timeframeLabel} | {data.barsCount} {barLabel} | {data.rangeLabel}
+              </Typography>
+            </Stack>
+            <LineChart
+              colors={[theme.palette.primary.main]}
+              xAxis={[
+                {
+                  scaleType: 'point',
+                  data: data.labels,
+                  tickInterval,
+                  height: 24,
+                },
+              ]}
+              yAxis={[{ width: 50 }]}
+              series={[
+                {
+                  id: 'close',
+                  label: 'Close',
+                  showMark: false,
+                  curve: 'linear',
+                  area: true,
+                  data: data.closes,
+                },
+              ]}
+              height={250}
+              margin={{ left: 0, right: 20, top: 20, bottom: 0 }}
+              grid={{ horizontal: true }}
+              sx={{
+                '& .MuiAreaElement-series-close': {
+                  fill: `url('#${priceGradientId}')`,
+                },
+              }}
+              hideLegend
+            >
+              <AreaGradient color={theme.palette.primary.main} id={priceGradientId} />
+            </LineChart>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Card variant="outlined" sx={{ width: '100%' }}>
+          <CardContent>
+            <Typography component="h2" variant="subtitle2" gutterBottom>
+              {symbol} Volume
+            </Typography>
+            <Stack sx={{ justifyContent: 'space-between' }}>
+              <Stack
+                direction="row"
+                sx={{ alignItems: 'center', gap: 1 }}
+              >
+                <Typography variant="h4" component="p">
+                  {data.lastVolume == null ? '--' : formatCompactNumber(data.lastVolume)}
+                </Typography>
+                <Chip size="small" color={volumeChange.color} label={volumeChange.label} />
+              </Stack>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                Avg volume: {data.avgVolume == null ? 'N/A' : formatCompactNumber(data.avgVolume)}
+              </Typography>
+            </Stack>
+            <BarChart
+              colors={[
+                (theme.vars || theme).palette.primary.dark,
+                (theme.vars || theme).palette.primary.main,
+              ]}
+              xAxis={[
+                {
+                  scaleType: 'band',
+                  categoryGapRatio: 0.6,
+                  data: data.labels,
+                  tickInterval,
+                  height: 24,
+                },
+              ]}
+              yAxis={[{ width: 50 }]}
+              series={[
+                {
+                  id: 'volume',
+                  label: 'Volume',
+                  data: data.volumes,
+                },
+              ]}
+              height={250}
+              margin={{ left: 0, right: 0, top: 20, bottom: 0 }}
+              grid={{ horizontal: true }}
+              hideLegend
+            />
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid size={{ xs: 12 }}>
+        <Card
+          variant="outlined"
+          sx={{ display: 'flex', flexDirection: 'column', gap: '8px', flexGrow: 1 }}
+        >
+          <CardContent>
+            <Typography component="h2" variant="subtitle2">
+              {symbol} Trend Breakdown
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <PieChart
+                colors={trendRows.map((row) => row.color)}
+                margin={{ left: 80, right: 80, top: 80, bottom: 80 }}
+                series={[
+                  {
+                    data: trendRows.map((row) => ({
+                      label: row.label,
+                      value: row.value,
+                    })),
+                    innerRadius: 75,
+                    outerRadius: 100,
+                    paddingAngle: 0,
+                    highlightScope: { fade: 'global', highlight: 'item' },
+                  },
+                ]}
+                height={260}
+                width={260}
+                hideLegend
+              >
+                <PieCenterLabel primaryText={`${upPercent}%`} secondaryText={`Up ${barLabel}`} />
+              </PieChart>
+            </Box>
+            {trendRows.map((row) => {
+              const percent = trendTotal === 0 ? 0 : (row.value / trendTotal) * 100
+              return (
+                <Stack
+                  key={row.label}
+                  direction="row"
+                  sx={{ alignItems: 'center', gap: 2, pb: 2 }}
+                >
+                  <Box
+                    sx={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: '999px',
+                      backgroundColor: row.color,
+                    }}
+                  />
+                  <Stack sx={{ gap: 1, flexGrow: 1 }}>
+                    <Stack
+                      direction="row"
+                      sx={{
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 2,
+                      }}
+                    >
+                      <Typography variant="body2" sx={{ fontWeight: '500' }}>
+                        {row.label}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        {Math.round(percent)}%
+                      </Typography>
+                    </Stack>
+                    <LinearProgress
+                      variant="determinate"
+                      aria-label={`${row.label} ${barLabel}`}
+                      value={percent}
+                      sx={{
+                        [`& .${linearProgressClasses.bar}`]: {
+                          backgroundColor: row.color,
+                        },
+                      }}
+                    />
+                  </Stack>
+                </Stack>
+              )
+            })}
+          </CardContent>
+        </Card>
+      </Grid>
+    </Grid>
+  )
 }
 
 export default function DataSearchPage(props: { disableCustomTheme?: boolean }) {
@@ -65,6 +404,56 @@ export default function DataSearchPage(props: { disableCustomTheme?: boolean }) 
       lastClose: closes[0]?.toFixed(2),
     }
   }, [bars])
+
+  const chartData = useMemo<StockChartData | null>(() => {
+    if (!bars.length) return null
+    const sortedBars = [...bars].sort((a, b) => {
+      if (a.date !== b.date) return a.date - b.date
+      return (a.time ?? 0) - (b.time ?? 0)
+    })
+    const labels = sortedBars.map((bar) => {
+      const dateLabel = formatDate(bar.date)
+      const timeLabel =
+        timeframe !== 'daily' && bar.time ? ` ${formatTime(bar.time)}` : ''
+      return `${dateLabel}${timeLabel}`
+    })
+    const closes = sortedBars.map((bar) => bar.close ?? 0)
+    const volumes = sortedBars.map((bar) => bar.volume ?? 0)
+    const lastClose = closes.length ? closes[closes.length - 1] : null
+    const prevClose = closes.length > 1 ? closes[closes.length - 2] : null
+    const lastVolume = volumes.length ? volumes[volumes.length - 1] : null
+    const avgVolume = volumes.length
+      ? volumes.reduce((sum, value) => sum + value, 0) / volumes.length
+      : null
+    const trend = sortedBars.reduce(
+      (acc, bar) => {
+        if (bar.open == null || bar.close == null) return acc
+        if (bar.close > bar.open) acc.up += 1
+        else if (bar.close < bar.open) acc.down += 1
+        else acc.flat += 1
+        return acc
+      },
+      { up: 0, down: 0, flat: 0 }
+    )
+    const total = trend.up + trend.down + trend.flat
+    const rangeLabel =
+      labels.length > 1 ? `${labels[0]} to ${labels[labels.length - 1]}` : labels[0] ?? ''
+    const tickStep = Math.max(1, Math.ceil(labels.length / 6))
+
+    return {
+      labels,
+      closes,
+      volumes,
+      rangeLabel,
+      barsCount: sortedBars.length,
+      lastClose,
+      prevClose,
+      lastVolume,
+      avgVolume,
+      trend: { ...trend, total },
+      tickStep,
+    }
+  }, [bars, timeframe])
 
   async function runSearch() {
     if (!query.trim()) return
@@ -286,6 +675,23 @@ export default function DataSearchPage(props: { disableCustomTheme?: boolean }) 
                 )}
               </CardContent>
             </Card>
+          </Box>
+
+          <Box>
+            <Stack spacing={2}>
+              <Typography variant="h5">Charts</Typography>
+              {chartData && selected ? (
+                <StockCharts data={chartData} symbol={selected.symbol} timeframe={timeframe} />
+              ) : (
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography color="text.secondary">
+                      Select a symbol to load charts with real market data.
+                    </Typography>
+                  </CardContent>
+                </Card>
+              )}
+            </Stack>
           </Box>
         </Box>
       </Container>
