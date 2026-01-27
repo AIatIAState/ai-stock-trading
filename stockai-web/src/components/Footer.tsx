@@ -11,6 +11,7 @@ export default function Footer() {
           alignItems={{ xs: 'flex-start', md: 'center' }}
         >
           <Typography variant="body2">StockTrAIder 2026</Typography>
+          <Typography variant="body2">Copyright © Gru-Man.</Typography>
           <Typography variant="body2" color="text.secondary">
             Built for practical learning and clear market context.
           </Typography>
