@@ -29,6 +29,7 @@ export function fetchBars(params: {
   start?: string
   end?: string
   limit?: number
+  order?: 'asc' | 'desc'
 }) {
   const qs = new URLSearchParams({
     symbol: params.symbol,
@@ -36,6 +37,7 @@ export function fetchBars(params: {
     ...(params.start ? { start: params.start } : {}),
     ...(params.end ? { end: params.end } : {}),
     ...(params.limit ? { limit: String(params.limit) } : {}),
+    ...(params.order ? { order: params.order } : {}),
   })
   return requestJson<{ results: Bar[] }>(`/api/bars?${qs.toString()}`)
 }
