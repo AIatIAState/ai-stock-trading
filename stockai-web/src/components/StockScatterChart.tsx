@@ -91,7 +91,7 @@ export default function StockScatterChart(props: StockScatterChartProps) {
                       <MenuItem value={"6 Months"}>6 Months</MenuItem>
                       <MenuItem value={"1 Year"}>1 Year</MenuItem>
                       <MenuItem value={"5 Years"}>5 Years</MenuItem>
-                      <MenuItem value={"20 Years"}>All Time</MenuItem>
+                      <MenuItem value={"20 Years"}>20 Years</MenuItem>
                   </Select>
               </FormControl>
               </Stack>
