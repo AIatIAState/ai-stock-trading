@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
 DB_PATH = Path(os.getenv("DB_PATH", Path(__file__).resolve().parents[1] / "data" / "stocks.db"))
-MAX_LIMIT = 5000
+MAX_LIMIT = 50000
 
 app.add_middleware(
     CORSMiddleware,
@@ -94,5 +94,5 @@ def get_bars(
         rows = conn.execute(sql, params).fetchall()
     finally:
         conn.close()
-
+    print(rows)
     return {"results": [dict(row) for row in rows]}
