@@ -9,7 +9,8 @@ import OptionBarChart from './OptionBarChart.tsx';
 import StockSearch from "./StockSearch.tsx";
 import {useState} from "react";
 import type {Bar} from "../services/api.ts";
-import StockScatterChart from "./StockScatterChart.tsx";
+import StockScatterChart from "./charts/StockScatterChart.tsx";
+// import StockPatternRecognitionGrid from "./StockPatternRecognitionGrid.tsx";
 
 
 export default function MainGrid() {
@@ -27,7 +28,9 @@ export default function MainGrid() {
         <br/>
         <br/>
         <StockScatterChart data={data}/>
-
+        <br/>
+        <br/>
+        {/*<StockPatternRecognitionGrid data={data}/>*/}
       <Grid
         container
         spacing={2}

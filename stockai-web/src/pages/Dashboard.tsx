@@ -8,15 +8,15 @@ import MainGrid from '../components/MainGrid';
 // import SideMenu from '../components/SideMenu';
 import AppAppBar from '../components/AppAppBar';
 import Footer from '../components/Footer';
+import SideMenu from "../components/SideMenu.tsx";
 
 export default function Dashboard() {
   return (
       <>
       <CssBaseline enableColorScheme />
-      
-      <AppAppBar />
+          
       <Box sx={{ display: 'flex' }}>
-        {/* <SideMenu /> */}
+         <SideMenu />
         <Box
           component="main"
           sx={(theme) => ({

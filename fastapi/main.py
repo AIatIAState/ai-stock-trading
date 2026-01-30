@@ -87,14 +87,13 @@ def get_bars(
         rows = conn.execute(sql, params).fetchall()
     finally:
         conn.close()
-    print(rows)
+
     return {"results": [dict(row) for row in rows]}
 
 @app.get("/api/getPatterns")
-def get_patterns():
-    symbol: str = Query(..., min_length=1),
-    timeframe: str = Query("daily", "The timeframe in which to search for stock prices"),
-    trend_length: str | None = Query(None, "The length of the searched similar trend")
-    similarity_score: str | None = Query(None, "The minimum score of the searched similar trend")
+def get_patterns(symbol: str = Query(..., min_length=1),
+    timeframe: str = Query("daily"),
+    trend_length: str | None = Query(None,),
+    similarity_score: str | None = Query(None)):
 
     return get_dtw_patterns(symbol, timeframe, trend_length, similarity_score)

@@ -5,12 +5,7 @@ import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import {LineChart} from '@mui/x-charts/LineChart';
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import {InputLabel} from "@mui/material";
-import FormControl from "@mui/material/FormControl";
-import type {Bar} from "../services/api.ts";
-import { useState} from "react";
+import type {Bar} from "../../services/api.ts";
 
 
 function getDateFromYYYYMMDD(yyyymmdd: string): Date {
@@ -21,40 +16,30 @@ function getDateFromYYYYMMDD(yyyymmdd: string): Date {
     return new Date(Date.UTC(year, month, day));
 }
 export interface StockScatterChartProps {
-        data: Bar[]
+        bars: Bar[]
+        startDate: Date,
+        endDate: Date,
 }
 export default function StockScatterChart(props: StockScatterChartProps) {
   const theme = useTheme();
-  const [timeframe, setTimeframe] = useState("1 Year");
-    if(props.data.length <= 0) {
+    if(props.bars.length <= 0) {
         return <></>
     }
+    console.log(props.endDate)
 
-    function getMinDate(dateTimeFrame: string){
-        const tempDate = new Date()
-        tempDate.setDate(dateTimeFrame === "1 Week" ? today.getDate() - 7 :
-            dateTimeFrame === "1 Month" ? today.getDate() - 30:
-                dateTimeFrame === "3 Months" ? today.getDate() - 90 :
-                    dateTimeFrame === "6 Months" ? today.getDate() - 183 :
-                        dateTimeFrame === "1 Year" ? today.getDate() - 365:
-                            dateTimeFrame === "5 Years" ? today.getDate() - 1825:
-                                today.getDate() - 3650)
-        return tempDate
-    }
-    const today = new Date()
   const dates: Date[] = []
     const opens: number[] = []
-    props.data.forEach((item: Bar)=> {
+    props.bars.forEach((item: Bar)=> {
         const parsedDate = getDateFromYYYYMMDD(item.date.toString())
-        if(parsedDate > getMinDate(timeframe)){
+        if(parsedDate >= props.startDate && parsedDate <= props.endDate && item.open != null){
             dates.push(parsedDate)
             opens.push(item.open == null ? 0 : item.open)
         }
     })
 
-    const symbol = props.data[0].symbol
-  const heading = "Stock Open Costs for " + symbol
-    const percentage = ((props.data[props.data.length - 1].open! - props.data[props.data.length - 2].open!) / props.data[props.data.length - 2].open! * 100)
+    const symbol = props.bars[0].symbol
+  const heading = symbol + " Price"
+    const percentage = ((props.bars[props.bars.length - 1].open! - props.bars[props.bars.length - 2].open!) / props.bars[props.bars.length - 2].open! * 100)
   const colorPalette = [
     theme.palette.primary.light,
     theme.palette.primary.main,
@@ -64,9 +49,6 @@ export default function StockScatterChart(props: StockScatterChartProps) {
   return (
     <Card variant="outlined" sx={{ width: '100%' }}>
       <CardContent>
-        <Typography component="h2" variant="subtitle2" gutterBottom>
-          Total Earnings
-        </Typography>
         <Stack sx={{ justifyContent: 'space-between' }}>
           <Stack
             direction="row"
@@ -80,25 +62,10 @@ export default function StockScatterChart(props: StockScatterChartProps) {
                 {heading}
             </Typography>
             <Chip size="small" color={percentage > 0 ? "success" : "warning"} label={percentage > 0 ? "+" + percentage.toFixed(2) : percentage.toFixed(2)} />
-              <Stack sx={{ ml: 'auto' }}>
-              <FormControl>
-                  <InputLabel>Timeframe</InputLabel>
-                  <Select
-                      label={timeframe} value={timeframe} defaultValue={"1 Year"} onChange={(e) => setTimeframe(e.target.value)}>
-                      <MenuItem value={"1 Week"}>1 Week</MenuItem>
-                      <MenuItem value={"1 Month"}>1 Month</MenuItem>
-                      <MenuItem value={"3 Months"}>3 Months</MenuItem>
-                      <MenuItem value={"6 Months"}>6 Months</MenuItem>
-                      <MenuItem value={"1 Year"}>1 Year</MenuItem>
-                      <MenuItem value={"5 Years"}>5 Years</MenuItem>
-                      <MenuItem value={"20 Years"}>20 Years</MenuItem>
-                  </Select>
-              </FormControl>
-              </Stack>
           </Stack>
 
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Portfolio earnings for {timeframe.toLowerCase()}
+            Open prices from {props.startDate.toDateString()} to {props.endDate.toDateString()}
           </Typography>
         </Stack>
         <LineChart
@@ -109,8 +76,8 @@ export default function StockScatterChart(props: StockScatterChartProps) {
               data: dates,
               tickInterval: (_index, i) => (i + 1) % 50 === 0,
               height: 24,
-                max: today,
-                min: getMinDate(timeframe),
+                max: props.endDate,
+                min: props.startDate,
               valueFormatter: (value: Date) => {
                   return `${value.getMonth() + 1}/${value.getDate()}/${value.getFullYear()}`;
               }
