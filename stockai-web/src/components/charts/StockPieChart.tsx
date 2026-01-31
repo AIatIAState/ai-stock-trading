@@ -1,5 +1,4 @@
 import type {Bar} from "../../services/api.ts";
-import {Box} from "@mui/material";
 import {PieChart} from "@mui/x-charts/PieChart";
 import type {PieValueType} from "@mui/x-charts";
 import {useDrawingArea} from "@mui/x-charts/hooks";
@@ -12,7 +11,6 @@ import Typography from "@mui/material/Typography";
 interface StockPieChartProps {
     bars: Bar[],
     startDate: Date,
-    endDate: Date,
 }
 function getDateFromYYYYMMDD(yyyymmdd: string): Date {
     const year = parseInt(yyyymmdd.substring(0, 4), 10);
@@ -67,7 +65,7 @@ export function StockPieChart(props: StockPieChartProps){
     let trendDown = 0
     let trendFlat = 0
     props.bars.forEach((bar: Bar) => {
-        if(getDateFromYYYYMMDD(bar.date.toString()) >= props.startDate && getDateFromYYYYMMDD(bar.date.toString()) <= props.endDate && bar.open != null && bar.close != null) {
+        if(getDateFromYYYYMMDD(bar.date.toString()) >= props.startDate && bar.open != null && bar.close != null) {
             if (bar.open > bar.close) {
                 trendUp += 1
             } else if (bar.open < bar.close) {
@@ -83,7 +81,7 @@ export function StockPieChart(props: StockPieChartProps){
                 AAPL.US Trend Breakdown
             </Typography>
         <PieChart
-            colors={[theme.palette.primary.dark, theme.palette.secondary.main, theme.palette.background.default,]}
+            colors={[theme.palette.primary.dark, theme.palette.secondary.main, theme.palette.grey.A700]}
             margin={{ left: 80, right: 80, top: 80, bottom: 80 }}
             series={[
                 {

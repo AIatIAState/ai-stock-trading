@@ -18,20 +18,18 @@ function getDateFromYYYYMMDD(yyyymmdd: string): Date {
 export interface StockScatterChartProps {
         bars: Bar[]
         startDate: Date,
-        endDate: Date,
 }
 export default function StockScatterChart(props: StockScatterChartProps) {
   const theme = useTheme();
     if(props.bars.length <= 0) {
         return <></>
     }
-    console.log(props.endDate)
 
   const dates: Date[] = []
     const opens: number[] = []
     props.bars.forEach((item: Bar)=> {
         const parsedDate = getDateFromYYYYMMDD(item.date.toString())
-        if(parsedDate >= props.startDate && parsedDate <= props.endDate && item.open != null){
+        if(parsedDate >= props.startDate && item.open != null){
             dates.push(parsedDate)
             opens.push(item.open == null ? 0 : item.open)
         }
@@ -65,7 +63,7 @@ export default function StockScatterChart(props: StockScatterChartProps) {
           </Stack>
 
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Open prices from {props.startDate.toDateString()} to {props.endDate.toDateString()}
+            Open prices from {props.startDate.toDateString()}
           </Typography>
         </Stack>
         <LineChart
@@ -76,7 +74,6 @@ export default function StockScatterChart(props: StockScatterChartProps) {
               data: dates,
               tickInterval: (_index, i) => (i + 1) % 50 === 0,
               height: 24,
-                max: props.endDate,
                 min: props.startDate,
               valueFormatter: (value: Date) => {
                   return `${value.getMonth() + 1}/${value.getDate()}/${value.getFullYear()}`;

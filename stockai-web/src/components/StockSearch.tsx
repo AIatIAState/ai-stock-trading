@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import { Button, Card, CardContent, Stack, TextField, Typography} from "@mui/material";
 import type {Bar, SymbolInfo} from "../services/api.ts";
 import Grid from "@mui/material/Grid";
+import {GradientCircularProgress} from "./GradientCircularProgress.tsx";
 
 
 export interface StockSearchProps {
@@ -12,6 +13,7 @@ export interface StockSearchProps {
 export default function StockSearch(props: StockSearchProps) {
     const [symbolData, setSymbolData] = useState<SymbolInfo[]>([])
     const [searchValue, setSearchValue] = useState<string>("")
+    const [loading, setLoading] = useState<boolean>(false)
 
     function getAutocompleteSymbols(symbolList: SymbolInfo[]) {
         if (searchValue == "" && symbolData.length === 0){
@@ -35,7 +37,7 @@ export default function StockSearch(props: StockSearchProps) {
                 }}
                 sx={{ justifyContent: 'space-between' }}
             >
-                <Box width={'120px'}sx={{ textAlign: 'left' }}>
+                <Box width={'120px'} sx={{ textAlign: 'left' }}>
                     <Typography>{symbol.symbol}</Typography>
                     <Typography variant="caption" color="text.secondary">
                         {(symbol.exchange || 'N/A').toUpperCase()} | {symbol.asset_type ?? 'asset'}
@@ -57,9 +59,11 @@ export default function StockSearch(props: StockSearchProps) {
         setSymbolData((await fetchStockSymbols(searchValue, 12))['results'])
     }
     async function getSymbolData(symbol: string) {
+        setLoading(true)
         setSearchValue("")
         const response = await fetchStockHistory(symbol, "daily")
         props.setBars(response.results)
+        setLoading(false)
 
     }
 
@@ -88,6 +92,7 @@ export default function StockSearch(props: StockSearchProps) {
                     </Stack>
                 </CardContent>
             </Card>
+            {loading && <Box alignSelf={'center'}><GradientCircularProgress/></Box>}
             <Card style={{paddingLeft: '16px', paddingRight: '16px'}}>
                 {getAutocompleteSymbols(symbolData)}
             </Card>

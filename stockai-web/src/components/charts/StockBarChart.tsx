@@ -18,24 +18,22 @@ function getDateFromYYYYMMDD(yyyymmdd: string): Date {
 export interface StockBarChartProps {
     bars: Bar[]
     startDate: Date,
-    endDate: Date,
 }
 export default function StockBarChart(props: StockBarChartProps) {
     const theme = useTheme();
+
     if(props.bars.length <= 0) {
         return <></>
     }
-    console.log(props.endDate)
     const dates: Date[] = []
     const volumes: number[] = []
     props.bars.forEach((item: Bar)=> {
         const parsedDate = getDateFromYYYYMMDD(item.date.toString())
-        if(parsedDate >= props.startDate && parsedDate <= props.endDate){
+        if(parsedDate >= props.startDate){
             dates.push(parsedDate)
             volumes.push(item.volume === null ? 0 : item.volume)
         }
     })
-
     const symbol = props.bars[0].symbol
     const heading = symbol + " Volume"
     const percentage = ((props.bars[props.bars.length - 1].volume! - props.bars[props.bars.length - 2].volume!) / props.bars[props.bars.length - 2].volume! * 100)
@@ -64,7 +62,7 @@ export default function StockBarChart(props: StockBarChartProps) {
                     </Stack>
 
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        Volumes from {props.startDate.toDateString()} to {props.endDate.toDateString()}
+                        Volumes from {props.startDate.toDateString()}
                     </Typography>
                 </Stack>
                 <BarChart
@@ -75,8 +73,6 @@ export default function StockBarChart(props: StockBarChartProps) {
                             categoryGapRatio: 0.6,
                             data: dates,
                             height: 24,
-                            max: props.endDate,
-                            min: props.startDate,
                             valueFormatter: (value: Date) => {
                                 return `${value.getMonth() + 1}/${value.getDate()}/${value.getFullYear()}`;
                             }

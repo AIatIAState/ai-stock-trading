@@ -6,7 +6,6 @@ import Stack from '@mui/material/Stack';
 import Header from '../components/Header';
 import MainGrid from '../components/MainGrid';
 // import SideMenu from '../components/SideMenu';
-import AppAppBar from '../components/AppAppBar';
 import Footer from '../components/Footer';
 import SideMenu from "../components/SideMenu.tsx";
 

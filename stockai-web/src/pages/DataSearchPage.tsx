@@ -26,6 +26,7 @@ import AppAppBar from '../components/AppAppBar'
 import Footer from '../components/Footer'
 import StockSearch from "../components/StockSearch.tsx";
 import {StockCharts} from "../components/charts/StockCharts.tsx";
+import {BarsTable} from "../components/BarsTable.tsx";
 
 
 
@@ -159,124 +160,7 @@ export default function DataSearchPage(props: { disableCustomTheme?: boolean }) 
           </Card>
             <StockSearch setBars={setBars}/>
             <StockCharts bars={bars}/>
-
-          {/* RECENT BARS TABLE */}
-          <Card>
-            <CardContent>
-              <Typography variant="h5" gutterBottom>
-                Recent bars
-              </Typography>
-              {selected ? (
-                <Stack spacing={2}>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Symbol
-                      </Typography>
-                      <Typography variant="h6">{selected.symbol}</Typography>
-                    </Box>
-                    <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
-                    {stats ? (
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                        <Box>
-                          <Typography variant="body2" color="text.secondary">
-                            Bars loaded
-                          </Typography>
-                          <Typography variant="h6">{stats.total}</Typography>
-                        </Box>
-                        <Box>
-                          <Typography variant="body2" color="text.secondary">
-                            Last close
-                          </Typography>
-                          <Typography variant="h6">{stats.lastClose}</Typography>
-                        </Box>
-                        <Box>
-                          <Typography variant="body2" color="text.secondary">
-                            High / Low
-                          </Typography>
-                          <Typography variant="h6">
-                            {stats.maxHigh} / {stats.minLow}
-                          </Typography>
-                        </Box>
-                      </Stack>
-                    ) : null}
-                  </Stack>
-
-                  <Stack
-                    direction={{ xs: 'column', sm: 'row' }}
-                    spacing={2}
-                    alignItems={{ xs: 'flex-start', sm: 'center' }}
-                    justifyContent="space-between"
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      {displayBars.length
-                        ? `Showing ${displayBars.length} of ${barsLimit} bars`
-                        : 'No bars loaded yet.'}
-                    </Typography>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <ToggleButtonGroup
-                        size="small"
-                        exclusive
-                        value={sortOrder}
-                        onChange={(_, value) => {
-                          if (value) {
-                            void handleSortOrderChange(value as 'newest' | 'oldest')
-                          }
-                        }}
-                      >
-                        <ToggleButton value="newest">Newest</ToggleButton>
-                        <ToggleButton value="oldest">Oldest</ToggleButton>
-                      </ToggleButtonGroup>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={handleLoadMoreBars}
-                        disabled={!selected || loading || barsLimit >= MAX_BARS_LIMIT}
-                      >
-                        Load {BARS_LIMIT_STEP} more
-                      </Button>
-                    </Stack>
-                  </Stack>
-
-                  {displayBars.length > 0 ? (
-                    <TableContainer component={Paper} sx={{ maxHeight: 360 }}>
-                      <Table size="small" stickyHeader>
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>Date</TableCell>
-                            <TableCell>Time</TableCell>
-                            <TableCell>Open</TableCell>
-                            <TableCell>High</TableCell>
-                            <TableCell>Low</TableCell>
-                            <TableCell>Close</TableCell>
-                            <TableCell>Volume</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {displayBars.map((bar) => (
-                            <TableRow key={`${bar.symbol}-${bar.date}-${bar.time}`}>
-                              <TableCell>{formatDate(bar.date)}</TableCell>
-                              <TableCell>{bar.time ? formatTime(bar.time) : 'N/A'}</TableCell>
-                              <TableCell>{bar.open?.toFixed(2) ?? 'N/A'}</TableCell>
-                              <TableCell>{bar.high?.toFixed(2) ?? 'N/A'}</TableCell>
-                              <TableCell>{bar.low?.toFixed(2) ?? 'N/A'}</TableCell>
-                              <TableCell>{bar.close?.toFixed(2) ?? 'N/A'}</TableCell>
-                              <TableCell>{bar.volume?.toFixed(0) ?? 'N/A'}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  ) : (
-                    <Typography color="text.secondary">Select a symbol to load recent bars.</Typography>
-                  )}
-                </Stack>
-              ) : (
-                <Typography color="text.secondary">Select a symbol to load recent bars.</Typography>
-              )}
-            </CardContent>
-          </Card>
-          {/* END BARS TABLE */}
+            <BarsTable bars={bars}/>
         </Box>
       </Container>
       <Footer />
