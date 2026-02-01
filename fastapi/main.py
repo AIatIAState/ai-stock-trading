@@ -1,13 +1,13 @@
-import os
-import sqlite3
-from pathlib import Path
+
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
+from Connector import get_connection
+from models.PatternRecognition import get_dtw_patterns
+
 app = FastAPI()
 
-DB_PATH = Path(os.getenv("DB_PATH", Path(__file__).resolve().parents[1] / "data" / "stocks.db"))
 MAX_LIMIT = 50000
 
 app.add_middleware(
@@ -18,13 +18,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-def get_connection():
-    if not DB_PATH.exists():
-        raise HTTPException(status_code=500, detail=f"Database not found at {DB_PATH}")
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
 
 
 @app.get("/api/health")
@@ -94,5 +87,13 @@ def get_bars(
         rows = conn.execute(sql, params).fetchall()
     finally:
         conn.close()
-    print(rows)
+
     return {"results": [dict(row) for row in rows]}
+
+@app.get("/api/getPatterns")
+def get_patterns(symbol: str = Query(..., min_length=1),
+    timeframe: str = Query("daily"),
+    trend_length: int | None = Query(None,),
+    similarity_score: int | None = Query(None)):
+
+    return get_dtw_patterns(symbol, timeframe, trend_length, similarity_score)

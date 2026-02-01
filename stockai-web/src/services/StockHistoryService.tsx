@@ -9,16 +9,12 @@ export async function fetchStockSymbols(query: string, limit: number = 25): Prom
         throw new Error(err instanceof Error ? err.message : 'Failed to fetch symbols')
     }
 }
-export async function fetchStockHistory(stockSymbol: string, timeframe: "daily", startDate?: Date, endDate?: Date, limit?: string) : Promise<{results: Bar[]}> {
+export async function fetchStockHistory(stockSymbol: string, timeframe: "daily", limit?: string) : Promise<{results: Bar[]}> {
     try {
-        const startString = startDate ? startDate.toISOString().split('T')[0].replace(/-/g, ''): "20000101"
-        const endString = endDate ? endDate.toISOString().split('T')[0].replace(/-/g, ''): new Date().toISOString().split('T')[0].replace(/-/g, '')
         const limitString = limit ? limit : '12000'
         const params = new URLSearchParams({
             symbol: stockSymbol,
             timeframe: timeframe,
-            start: startString,
-            end: endString,
             limit: limitString,
             order: "asc"})
         const response = await fetch(`${API_BASE}/api/bars?${params.toString()}`)

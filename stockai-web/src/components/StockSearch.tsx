@@ -1,48 +1,74 @@
-import FormControl from '@mui/material/FormControl';
-import InputAdornment from '@mui/material/InputAdornment';
-import OutlinedInput from '@mui/material/OutlinedInput';
-import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import {fetchStockHistory, fetchStockSymbols} from "../services/StockHistoryService.tsx";
 import {type ReactElement, useState} from "react";
 import Box from "@mui/material/Box";
-import {List, Typography } from "@mui/material";
-import ListItemButton from "@mui/material/ListItemButton";
-import type {Bar} from "../services/api.ts";
+import { Button, Card, CardContent, Stack, TextField, Typography} from "@mui/material";
+import type {Bar, SymbolInfo} from "../services/api.ts";
+import Grid from "@mui/material/Grid";
+import {GradientCircularProgress} from "./GradientCircularProgress.tsx";
 
 
 export interface StockSearchProps {
-    setData: (data: Bar[]) => void
+    setBars: (data: Bar[]) => void
+    setSymbol: (data: string) => void
 }
 export default function StockSearch(props: StockSearchProps) {
-    const [searchSymbols, setSearchSymbols] = useState<Array<string>>([]);
+    const [symbolData, setSymbolData] = useState<SymbolInfo[]>([])
+    const [searchValue, setSearchValue] = useState<string>("")
+    const [loading, setLoading] = useState<boolean>(false)
 
-    function autoCompleteDropdown(symbols: Array<string>) {
-        if(searchSymbols.length == 0) {
+    function getAutocompleteSymbols(symbolList: SymbolInfo[]) {
+        if (searchValue == "" && symbolData.length === 0){
+            return <Stack spacing={1}>
+                <br/>
+                <Typography color="text.secondary">Search for a ticker to view its data.</Typography>
+                <br/>
+            </Stack>
+        }
+        if (searchValue == ""){
             return <></>
         }
-        const dropdownElements : ReactElement[] = []
-        symbols.forEach((symbol) => {
-            dropdownElements.push(<ListItemButton key={symbol} onClick={async ()=> {
-                await getSymbolData(symbol);
-            }}>
-                <Box>
-                    <Typography>
-                        {symbol}
+        const symbolSelectElements : ReactElement[] = []
+        symbolList.forEach((symbol) => {symbolSelectElements.push(
+            <Button
+                key={symbol.symbol}
+                variant={'outlined'}
+                onClick={() => {
+                    getSymbolData(symbol.symbol)
+                    setSearchValue("")
+                }}
+                sx={{ justifyContent: 'space-between' }}
+            >
+                <Box width={'120px'} sx={{ textAlign: 'left' }}>
+                    <Typography>{symbol.symbol}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                        {(symbol.exchange || 'N/A').toUpperCase()} | {symbol.asset_type ?? 'asset'}
                     </Typography>
                 </Box>
-            </ListItemButton>);
-        })
-        return <List  sx={{position: 'absolute',zIndex: 9999,bgcolor: 'background.paper', width: '100%'}}>
-            {dropdownElements}
-        </List>
+            </Button>
+        )})
+        return <>
+            <Typography color="text.primary">Matched Tickers</Typography>
+            <br/>
+            <Grid container spacing={4}>
+                {symbolSelectElements}
+             </Grid>
+            <br/>
+            </>
     }
 
-
+    async function updateAutocompleteSymbols(searchValue: string){
+        // @ts-ignore
+        setSymbolData((await fetchStockSymbols(searchValue, 12))['results'])
+    }
     async function getSymbolData(symbol: string) {
-        console.log("Fetching data for symbol: " + symbol)
-        setSearchSymbols([])
+        setLoading(true)
+        setSearchValue("")
+        props.setBars([])
+        props.setSymbol("")
         const response = await fetchStockHistory(symbol, "daily")
-        props.setData(response.results)
+        props.setBars(response.results)
+        props.setSymbol(response.results[0].symbol)
+        setLoading(false)
 
     }
 
@@ -50,52 +76,31 @@ export default function StockSearch(props: StockSearchProps) {
 
     return (
         <>
-            <FormControl variant="outlined" fullWidth={true} key={'stock-search-control'}>
-                <OutlinedInput
-                    size="small"
-                    id="search"
-                    placeholder="Search with stock symbol..."
-                    sx={{ flexGrow: 1 }}
-                    startAdornment={
-                        <InputAdornment position="start" sx={{ color: 'text.primary' }}>
-                            <SearchRoundedIcon fontSize="small" />
-                        </InputAdornment>
-                    }
-                    inputProps={{
-                        'aria-label': 'search',
-                    }}
-                    onChange={async (e) => {
-                        if(e.target.value == '') {
-                            return
-                        }
-                        const result = await fetchStockSymbols(e.target.value, 5)
-
-                        const completeSet : string[] = []
-                        result['results'].forEach((item: never) => {
-                            completeSet.push(item['symbol'])
-                        })
-                        setSearchSymbols(completeSet)
-                    }}
-                    onFocus={async (e) => {
-                        if(e.target.value == '') {
-                            return
-                        }
-                        const result = await fetchStockSymbols(e.target.value, 5)
-
-                        const completeSet : string[] = []
-                        result['results'].forEach((item: never) => {
-                            completeSet.push(item['symbol'])
-                        })
-                        setSearchSymbols(completeSet)
-                    }}
-                    onBlur={async () => {
-                        await new Promise(r => setTimeout(r, 100));
-                        setSearchSymbols([])
-                    }}
-                />
-            </FormControl>
-            {autoCompleteDropdown(searchSymbols)}
-            <br/>
+            <Card>
+                <CardContent>
+                    <Stack spacing={2}>
+                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="flex-end">
+                            <TextField
+                                label="Symbol search"
+                                value={searchValue}
+                                placeholder="AAPL, TSLA, SPY"
+                                fullWidth
+                                onChange={async (e) => {
+                                    setSearchValue(e.target.value)
+                                    if(e.target.value == '') {
+                                        return
+                                    }
+                                    await updateAutocompleteSymbols(e.target.value)
+                                }}
+                            />
+                        </Stack>
+                    </Stack>
+                </CardContent>
+            </Card>
+            {loading && <Box alignSelf={'center'}><GradientCircularProgress/></Box>}
+            <Card style={{paddingLeft: '16px', paddingRight: '16px'}}>
+                {getAutocompleteSymbols(symbolData)}
+            </Card>
         </>
 
     );
