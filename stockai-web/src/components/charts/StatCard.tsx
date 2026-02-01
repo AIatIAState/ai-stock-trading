@@ -1,7 +1,5 @@
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -16,20 +14,6 @@ export type StatCardProps = {
   data: number[];
 };
 
-function getDaysInMonth(month: number, year: number) {
-  const date = new Date(year, month, 0);
-  const monthName = date.toLocaleDateString('en-US', {
-    month: 'short',
-  });
-  const daysInMonth = date.getDate();
-  const days = [];
-  let i = 1;
-  while (days.length < daysInMonth) {
-    days.push(`${monthName} ${i}`);
-    i += 1;
-  }
-  return days;
-}
 
 function AreaGradient({ color, id }: { color: string; id: string }) {
   return (
@@ -42,16 +26,10 @@ function AreaGradient({ color, id }: { color: string; id: string }) {
   );
 }
 
-export default function StatCard({
-  title,
-  value,
-  interval,
-  trend,
-  data,
-}: StatCardProps) {
+export default function StatCard(props: StatCardProps) {
   const theme = useTheme();
-  const daysInWeek = getDaysInMonth(4, 2024);
-
+  const maxValue = Math.max(...props.data)
+  const minValue = Math.min(...props.data)
   const trendColors = {
     up:
       theme.palette.mode === 'light'
@@ -73,56 +51,42 @@ export default function StatCard({
     neutral: 'default' as const,
   };
 
-  const color = labelColors[trend];
-  const chartColor = trendColors[trend];
-  const trendValues = { up: '+25%', down: '-25%', neutral: '+5%' };
+  const color = labelColors[props.trend];
+  const chartColor = trendColors[props.trend];
 
   return (
-    <Card variant="outlined" sx={{ height: '100%', flexGrow: 1 }}>
-      <CardContent>
+<Stack direction={'row'} alignItems={'end'}>
         <Typography component="h2" variant="subtitle2" gutterBottom>
-          {title}
+          {props.title}
         </Typography>
-        <Stack
-          direction="column"
-          sx={{ justifyContent: 'space-between', flexGrow: '1', gap: 1 }}
-        >
           <Stack sx={{ justifyContent: 'space-between' }}>
             <Stack
               direction="row"
               sx={{ justifyContent: 'space-between', alignItems: 'center' }}
             >
-              <Typography variant="h4" component="p">
-                {value}
-              </Typography>
-              <Chip size="small" color={color} label={trendValues[trend]} />
+              <Chip size="small" color={color} label={props.value} />
             </Stack>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              {interval}
+              {props.interval}
             </Typography>
           </Stack>
           <Box sx={{ width: '100%', height: 50 }}>
             <SparkLineChart
               color={chartColor}
-              data={data}
+              data={props.data}
               area
               showHighlight
               showTooltip
-              xAxis={{
-                scaleType: 'band',
-                data: daysInWeek, // Use the correct property 'data' for xAxis
-              }}
+              yAxis={{max:maxValue * 1.1, min: minValue * .9 > 0 ? minValue * .9 : 0}}
               sx={{
                 [`& .${areaElementClasses.root}`]: {
-                  fill: `url(#area-gradient-${value})`,
+                  fill: `url(#area-gradient-${props.value})`,
                 },
               }}
             >
-              <AreaGradient color={chartColor} id={`area-gradient-${value}`} />
+              <AreaGradient color={chartColor} id={`area-gradient-${props.value}`} />
             </SparkLineChart>
           </Box>
-        </Stack>
-      </CardContent>
-    </Card>
+      </Stack>
   );
 }

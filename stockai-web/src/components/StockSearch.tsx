@@ -9,6 +9,7 @@ import {GradientCircularProgress} from "./GradientCircularProgress.tsx";
 
 export interface StockSearchProps {
     setBars: (data: Bar[]) => void
+    setSymbol: (data: string) => void
 }
 export default function StockSearch(props: StockSearchProps) {
     const [symbolData, setSymbolData] = useState<SymbolInfo[]>([])
@@ -56,13 +57,17 @@ export default function StockSearch(props: StockSearchProps) {
     }
 
     async function updateAutocompleteSymbols(searchValue: string){
+        // @ts-ignore
         setSymbolData((await fetchStockSymbols(searchValue, 12))['results'])
     }
     async function getSymbolData(symbol: string) {
         setLoading(true)
         setSearchValue("")
+        props.setBars([])
+        props.setSymbol("")
         const response = await fetchStockHistory(symbol, "daily")
         props.setBars(response.results)
+        props.setSymbol(response.results[0].symbol)
         setLoading(false)
 
     }

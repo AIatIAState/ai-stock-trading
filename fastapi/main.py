@@ -93,7 +93,7 @@ def get_bars(
 @app.get("/api/getPatterns")
 def get_patterns(symbol: str = Query(..., min_length=1),
     timeframe: str = Query("daily"),
-    trend_length: str | None = Query(None,),
-    similarity_score: str | None = Query(None)):
+    trend_length: int | None = Query(None,),
+    similarity_score: int | None = Query(None)):
 
     return get_dtw_patterns(symbol, timeframe, trend_length, similarity_score)

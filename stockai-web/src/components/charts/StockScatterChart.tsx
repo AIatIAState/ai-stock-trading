@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import {LineChart} from '@mui/x-charts/LineChart';
 import type {Bar} from "../../services/api.ts";
+import { useMemo } from "react";
 
 
 function getDateFromYYYYMMDD(yyyymmdd: string): Date {
@@ -17,23 +18,43 @@ function getDateFromYYYYMMDD(yyyymmdd: string): Date {
 }
 export interface StockScatterChartProps {
         bars: Bar[]
-        startDate: Date,
 }
 export default function StockScatterChart(props: StockScatterChartProps) {
-  const theme = useTheme();
+    const theme = useTheme();
+
+    const { opens, dates, min, max } = useMemo(() => {
+        if (!props.bars?.length) {
+            return { opens: [], dates: [], min: 0, max: 0 };
+        }
+
+        let min = Number.POSITIVE_INFINITY;
+        let max = Number.NEGATIVE_INFINITY;
+
+        const opens: number[] = [];
+        const dates: Date[] = [];
+
+        props.bars.forEach((item: Bar) => {
+            const open = item.open ?? 0;
+            const parsedDate = getDateFromYYYYMMDD(item.date.toString());
+
+            opens.push(open);
+            dates.push(parsedDate);
+
+            if (item.open != null) {
+                if (item.open < min) min = item.open;
+                if (item.open > max) max = item.open;
+            }
+        });
+
+        if (min === Number.POSITIVE_INFINITY) min = 0;
+        if (max === Number.NEGATIVE_INFINITY) max = 0;
+
+        return { opens, dates, min, max };
+    }, [props.bars]);
+
     if(props.bars.length <= 0) {
         return <></>
     }
-
-  const dates: Date[] = []
-    const opens: number[] = []
-    props.bars.forEach((item: Bar)=> {
-        const parsedDate = getDateFromYYYYMMDD(item.date.toString())
-        if(parsedDate >= props.startDate && item.open != null){
-            dates.push(parsedDate)
-            opens.push(item.open == null ? 0 : item.open)
-        }
-    })
 
     const symbol = props.bars[0].symbol
   const heading = symbol + " Price"
@@ -61,10 +82,6 @@ export default function StockScatterChart(props: StockScatterChartProps) {
             </Typography>
             <Chip size="small" color={percentage > 0 ? "success" : "warning"} label={percentage > 0 ? "+" + percentage.toFixed(2) : percentage.toFixed(2)} />
           </Stack>
-
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Open prices from {props.startDate.toDateString()}
-          </Typography>
         </Stack>
         <LineChart
           colors={colorPalette}
@@ -74,13 +91,12 @@ export default function StockScatterChart(props: StockScatterChartProps) {
               data: dates,
               tickInterval: (_index, i) => (i + 1) % 50 === 0,
               height: 24,
-                min: props.startDate,
               valueFormatter: (value: Date) => {
                   return `${value.getMonth() + 1}/${value.getDate()}/${value.getFullYear()}`;
               }
             },
           ]}
-          yAxis={[{ width: 50 }]}
+          yAxis={[{ width: 50, max:max * 1.1, min:min * .9 > 0 ? min * .9 : 0}]}
           series={[{
               id: symbol,
               label: symbol,
@@ -89,7 +105,7 @@ export default function StockScatterChart(props: StockScatterChartProps) {
               stack: 'total',
               area: true,
               stackOrder: 'ascending',
-              data: opens
+              data: opens,
         }]}
           height={250}
           margin={{ left: 0, right: 20, top: 20, bottom: 0 }}

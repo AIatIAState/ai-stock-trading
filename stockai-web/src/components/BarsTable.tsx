@@ -20,6 +20,7 @@ function formatTime(value: number) {
 
 export function BarsTable(props: BarsTableProps) {
     const [ barsPageIndex, setBarsPageIndex ] = useState(0)
+    const barsPerPage = 25
     if(props.bars.length === 0){
         return <></>
     }
@@ -81,11 +82,11 @@ export function BarsTable(props: BarsTableProps) {
                         justifyContent="space-between"
                     >
                         <Typography variant="body2" color="text.secondary">
-                            Showing {barsPageIndex + 1} of {Math.ceil(props.bars.length / 50 + 1)} pages
+                            Showing {barsPageIndex + 1} of {Math.ceil(props.bars.length / barsPerPage)} pages
                         </Typography>
                         <Stack direction="row" spacing={1} alignItems="center">
                                 <Button value="previous" disabled={barsPageIndex === 0} onClick={() => setBarsPageIndex(barsPageIndex - 1)}>Previous</Button>
-                                <Button value="next" disabled={barsPageIndex === Math.ceil(props.bars.length / 50)} onClick={() => setBarsPageIndex(barsPageIndex + 1)}>Next</Button>
+                                <Button value="next" disabled={barsPageIndex === Math.ceil(props.bars.length / barsPerPage) - 1} onClick={() => setBarsPageIndex(barsPageIndex + 1)}>Next</Button>
                         </Stack>
                     </Stack>
 
@@ -103,7 +104,7 @@ export function BarsTable(props: BarsTableProps) {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {reversedBars.slice(barsPageIndex * 50, (barsPageIndex + 1) * 50).map((bar) => (
+                                    {reversedBars.slice(barsPageIndex * barsPerPage, (barsPageIndex + 1) * barsPerPage).map((bar) => (
                                         <TableRow key={`${bar.symbol}-${bar.date}-${bar.time}`}>
                                             <TableCell>{formatDate(bar.date)}</TableCell>
                                             <TableCell>{bar.time ? formatTime(bar.time) : 'N/A'}</TableCell>

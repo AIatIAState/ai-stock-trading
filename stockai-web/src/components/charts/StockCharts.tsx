@@ -1,7 +1,7 @@
 import {Card, CardContent, Grid, InputLabel} from "@mui/material";
 import type {Bar} from "../../services/api.ts";
 import StockScatterChart from "./StockScatterChart.tsx";
-import {useState} from "react";
+import {useMemo, useState} from "react";
 import StockBarChart from "./StockBarChart.tsx";
 import { StockPieChart } from "./StockPieChart.tsx";
 import Box from "@mui/material/Box";
@@ -11,7 +11,10 @@ import MenuItem from "@mui/material/MenuItem";
 
 interface StockChartsProps {
     bars: Bar[],
+    symbol: string
 }
+const oneMonthAgo = new Date()
+oneMonthAgo.setDate(oneMonthAgo.getDate() - 30)
 
 function getDateFromYYYYMMDD(yyyymmdd: string): Date {
 
@@ -23,11 +26,27 @@ function getDateFromYYYYMMDD(yyyymmdd: string): Date {
 }
 
 export function StockCharts(props : StockChartsProps) {
-    const [startDate, setStartDate] = useState<Date>(new Date((new Date().getDate() - 30)))
-    const today = new Date()
+    const [startDate, setStartDate] = useState<Date>(oneMonthAgo)
+    const chartBars = useMemo(() => {
+        const chartBars: Bar[] = []
+        props.bars.forEach((bar) => {
+            const barDate = getDateFromYYYYMMDD(bar.date.toString())
+            if(barDate >= startDate){
+                chartBars.push(bar)
+            }
+        })
+        return chartBars
+    }, [props.bars, startDate, props.symbol])
+    console.log(startDate)
     if(props.bars.length == 0){
+        if(startDate.getDate() != oneMonthAgo.getDate()){
+            setStartDate(oneMonthAgo)
+        }
         return <></>
     }
+
+    const today = new Date()
+
 
     return (<>
             <Box sx={{ml: 'auto'}}>
@@ -63,7 +82,7 @@ export function StockCharts(props : StockChartsProps) {
         <Grid container spacing={2} columns={12}>
 
             <Grid size={{ xs: 12, md: 8 }}>
-                <StockBarChart bars={props.bars} startDate={startDate}/>
+                <StockBarChart bars={chartBars}/>
             </Grid>
 
             <Grid size={{ xs: 12, md: 4}}>
@@ -72,12 +91,12 @@ export function StockCharts(props : StockChartsProps) {
                     sx={{ display: 'flex', flexDirection: 'column', gap: '8px', flexGrow: 1 }}
                 >
                     <CardContent>
-                        <StockPieChart bars={props.bars} startDate={startDate}/>
+                        <StockPieChart bars={chartBars}/>
                     </CardContent>
                 </Card>
             </Grid>
             <Grid size={{ xs: 12}}>
-                <StockScatterChart bars={props.bars} startDate={startDate}/>
+                <StockScatterChart bars={chartBars}/>
 
             </Grid>
         </Grid>

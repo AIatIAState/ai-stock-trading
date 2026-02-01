@@ -10,14 +10,6 @@ import Typography from "@mui/material/Typography";
 
 interface StockPieChartProps {
     bars: Bar[],
-    startDate: Date,
-}
-function getDateFromYYYYMMDD(yyyymmdd: string): Date {
-    const year = parseInt(yyyymmdd.substring(0, 4), 10);
-    const month = parseInt(yyyymmdd.substring(4, 6), 10) - 1;
-    const day = parseInt(yyyymmdd.substring(6, 8), 10);
-
-    return new Date(Date.UTC(year, month, day));
 }
 
 interface StyledTextProps {
@@ -65,14 +57,12 @@ export function StockPieChart(props: StockPieChartProps){
     let trendDown = 0
     let trendFlat = 0
     props.bars.forEach((bar: Bar) => {
-        if(getDateFromYYYYMMDD(bar.date.toString()) >= props.startDate && bar.open != null && bar.close != null) {
-            if (bar.open > bar.close) {
-                trendUp += 1
-            } else if (bar.open < bar.close) {
-                trendDown += 1
-            } else {
-                trendFlat += 1
-            }
+        if (bar.open! > bar.close!) {
+            trendUp += 1
+        } else if (bar.open! < bar.close!) {
+            trendDown += 1
+        } else {
+            trendFlat += 1
         }
     })
     return <Card>

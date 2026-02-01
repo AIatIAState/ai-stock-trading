@@ -17,7 +17,6 @@ function getDateFromYYYYMMDD(yyyymmdd: string): Date {
 }
 export interface StockBarChartProps {
     bars: Bar[]
-    startDate: Date,
 }
 export default function StockBarChart(props: StockBarChartProps) {
     const theme = useTheme();
@@ -29,10 +28,9 @@ export default function StockBarChart(props: StockBarChartProps) {
     const volumes: number[] = []
     props.bars.forEach((item: Bar)=> {
         const parsedDate = getDateFromYYYYMMDD(item.date.toString())
-        if(parsedDate >= props.startDate){
-            dates.push(parsedDate)
-            volumes.push(item.volume === null ? 0 : item.volume)
-        }
+        dates.push(parsedDate)
+        volumes.push(item.volume === null ? 0 : item.volume)
+
     })
     const symbol = props.bars[0].symbol
     const heading = symbol + " Volume"
@@ -60,10 +58,6 @@ export default function StockBarChart(props: StockBarChartProps) {
                         </Typography>
                         <Chip size="small" color={percentage > 0 ? "success" : "warning"} label={percentage > 0 ? "+" + percentage.toFixed(2) : percentage.toFixed(2)} />
                     </Stack>
-
-                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        Volumes from {props.startDate.toDateString()}
-                    </Typography>
                 </Stack>
                 <BarChart
                     colors={colorPalette}
